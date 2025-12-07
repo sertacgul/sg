@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Dert Sırdaşı - OpenAI Edition</title>
+<style>
+body { background:#111; color:#eee; font-family:Arial; margin:0; padding:0; }
+#chat { height:80vh; overflow-y:auto; padding:10px; }
+.msg { padding:10px; margin:8px 0; border-radius:10px; max-width:80%; }
+.user { background:#ec4899; margin-left:auto; color:#fff; }
+.ai { background:#333; margin-right:auto; }
+#inputBox { position:fixed; bottom:0; left:0; right:0; padding:10px; background:#000; }
+textarea { width:80%; height:60px; border-radius:10px; padding:10px; background:#222; color:white; border:1px solid #444; }
+button { padding:12px 20px; border:none; background:#ec4899; color:white; border-radius:10px; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<div id="chat"></div>
+
+<div id="inputBox">
+    <textarea id="text"></textarea>
+    <button onclick="send()">Gönder</button>
+</div>
+
+<script>
+let history = [];
+
+function addMessage(t, cls){
+    let c = document.getElementById('chat');
+    let d = document.createElement('div');
+    d.className = 'msg ' + cls;
+    d.textContent = t;
+    c.appendChild(d);
+    c.scrollTop = c.scrollHeight;
+}
+
+async function send(){
+    let t = document.getElementById('text').value.trim();
+    if(!t) return;
+    addMessage(t, 'user');
+    document.getElementById('text').value = "";
+
+    history.push({ role:"user", content:t });
+
+    addMessage("Yazıyor...", "ai");
+
+    let chatDiv = document.getElementById("chat");
+
+    let r = await fetch("/api/chat", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ messages: history })
+    });
+
+    let j = await r.json();
+
+    chatDiv.removeChild(chatDiv.lastChild);
+
+    let reply = j.reply;
+    addMessage(reply, "ai");
+
+    history.push({ role:"assistant", content: reply });
+}
+</script>
+
+</body>
+</html>
